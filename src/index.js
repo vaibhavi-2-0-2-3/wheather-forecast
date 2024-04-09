@@ -21,6 +21,8 @@ function refreshWeather(response) {
 
   let iconElement = document.querySelector("#icon");
   iconElement.innerHTML = `<img src="${response.data.condition.icon_url}" class="weather-app-icon" />`;
+
+  getForecast(response.data.city);
 }
 
 function formatDate(date) {
@@ -59,28 +61,46 @@ function handleSearchSubmit(event) {
   searchCity(searchInput.value);
 }
 
-function displayForecast() {
-  let days = ["Tue", "Wed", "Thur", "Fri", "Sat"];
+function formatDay(timestamp) {
+  let date = new Date(timestamp * 1000);
+  let days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  return days[date.getDay()];
+}
+
+function getForecast(city) {
+  let apiKey = "451oc3044b9ba378tdf5a6545f3ca4ed";
+  let apiUrl = `https://api.shecodes.io/weather/v1/forecast?query=${city}&key=${apiKey}&units=metric`;
+  axios.get(apiUrl).then(displayForecast);
+}
+
+function displayForecast(response) {
   let forecastHtml = "";
 
-  days.forEach(function (day) {
-    forecastHtml =
-      forecastHtml +
-      ` <div class="row">
+  response.data.daily.forEach(function (day, index) {
+    if (index < 5) {
+      forecastHtml =
+        forecastHtml +
+        ` <div class="row">
             <div class="col-2">
-              <div class="weather-forecast-date">${day}</div>
+              <div class="weather-forecast-date">${formatDay(day.time)}</div>
               <img
-                src="http://shecodes-assets.s3.amazonaws.com/api/weather/icons/rain-day.png"
+                src="${day.condition.icon_url}"
                 alt=""
                 width="42"
                 class = "weather-forecast-icon"
               />
               <div class="weather-forecast-temperature">
-                <strong><span class="weather-forecast-temperature-max">18° </span></strong>
-                <span class="weather-forecast-temperature-min"> 12°</span>
+                <strong><span class="weather-forecast-temperature-max">${Math.round(
+                  day.temperature.maximum
+                )}°C </span></strong>
+                <span class="weather-forecast-temperature-min"> ${Math.round(
+                  day.temperature.minimum
+                )}°C </span>
               </div>
             </div>
           </div>`;
+    }
   });
 
   let forecastElement = document.querySelector("#weather-forecast");
@@ -91,5 +111,3 @@ let searchFormElement = document.querySelector("#search-form");
 searchFormElement.addEventListener("submit", handleSearchSubmit);
 
 searchCity("Paris");
-
-displayForecast();
